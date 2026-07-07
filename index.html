@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>経費 事前申請 フォーム</title>
+<style>
+  :root{
+    --navy:#1f3a5f;
+    --navy-dark:#16283f;
+    --accent:#c0392b;
+    --gray-bg:#f4f6f8;
+    --border:#ccd3da;
+    --text:#22303f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Segoe UI","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
+    background:var(--gray-bg);
+    color:var(--text);
+    margin:0;
+    padding:24px;
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+  h1{font-size:20px;color:var(--navy-dark);margin:0 0 4px;}
+  .sub{color:#5b6b7a;font-size:13px;margin-bottom:20px;}
+
+  .panel{
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:20px;
+    margin-bottom:20px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .mode-toggle{display:flex;gap:8px;margin-bottom:16px;}
+  .mode-btn{
+    flex:1;padding:10px;border:1px solid var(--border);background:#fff;
+    border-radius:6px;cursor:pointer;font-size:14px;color:var(--text);
+  }
+  .mode-btn.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+  label.field-label{display:block;font-size:12px;color:#5b6b7a;margin-bottom:4px;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .row > div{flex:1;min-width:160px;}
+  input[type=text], input[type=number]{
+    width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:5px;
+    font-size:14px;font-family:inherit;
+  }
+  input:focus{outline:2px solid var(--navy);outline-offset:1px;}
+
+  .subject-line{
+    display:flex;gap:10px;align-items:center;margin-bottom:16px;
+  }
+  .subject-line input{flex:1;}
+
+  .trip-card{
+    border:1px solid var(--border);border-radius:8px;margin-bottom:18px;overflow:hidden;
+  }
+  .trip-head{
+    background:var(--navy);color:#fff;padding:10px 14px;
+    display:flex;justify-content:space-between;align-items:center;font-size:14px;
+  }
+  .trip-head .del-btn{
+    background:transparent;border:1px solid rgba(255,255,255,0.6);color:#fff;
+    padding:3px 10px;border-radius:4px;cursor:pointer;font-size:12px;
+  }
+  .trip-body{padding:16px;}
+
+  table.item-table{width:100%;border-collapse:collapse;margin-top:8px;}
+  table.item-table th{
+    text-align:left;font-size:12px;color:#5b6b7a;padding:4px 8px;font-weight:600;
+  }
+  table.item-table td{padding:4px 6px;}
+  table.item-table td.label-cell{
+    font-size:13px;white-space:nowrap;padding-top:8px;color:var(--text);width:150px;
+  }
+  table.item-table td.amt-cell{width:130px;}
+  table.item-table input[type=number]{text-align:right;}
+  .rm-row-btn{
+    background:none;border:none;color:#b0392b;cursor:pointer;font-size:16px;padding:0 6px;
+  }
+  .add-row-btn{
+    margin-top:6px;background:#fff;border:1px dashed var(--border);color:var(--navy);
+    padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12px;
+  }
+  .trip-total{
+    text-align:right;font-size:14px;font-weight:600;margin-top:10px;color:var(--navy-dark);
+  }
+
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+  button.primary{
+    background:var(--navy);color:#fff;border:none;padding:10px 18px;border-radius:6px;
+    cursor:pointer;font-size:14px;
+  }
+  button.secondary{
+    background:#fff;color:var(--navy);border:1px solid var(--navy);padding:10px 18px;
+    border-radius:6px;cursor:pointer;font-size:14px;
+  }
+  button.ghost{
+    background:none;color:#8a97a3;border:none;padding:10px 4px;cursor:pointer;font-size:13px;
+    text-decoration:underline;
+  }
+
+  .grand-total{
+    font-size:16px;font-weight:700;text-align:right;color:var(--accent);margin-bottom:10px;
+  }
+
+  /* preview area - mimics the Outlook table exactly for copy/paste */
+  #previewArea{
+    background:#fff;border:1px solid var(--border);border-radius:8px;padding:20px;
+  }
+  #previewArea h2{font-size:14px;color:#5b6b7a;margin-top:0;}
+  .preview-table{
+    border-collapse:collapse;width:100%;margin-bottom:22px;font-size:13.5px;
+    font-family:"Meiryo","Hiragino Kaku Gothic ProN",sans-serif;
+  }
+  .preview-table td{
+    border:1px solid #000;padding:4px 8px;vertical-align:top;
+  }
+  .preview-table td.plabel{width:22%;}
+  .preview-table td.pval{width:20%;}
+  .preview-table td.pnote{width:58%;}
+  .preview-lead{font-family:"Meiryo",sans-serif;font-size:13.5px;margin-bottom:10px;}
+
+  .copy-status{font-size:13px;color:#2a7a3a;margin-left:6px;}
+
+  @media print{
+    .panel, .actions, .mode-toggle, h1, .sub{display:none;}
+    #previewArea{border:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>経費 事前申請 フォーム</h1>
+  <div class="sub">出張の経費を事前申請する際の入力フォームです。入力すると下部にメール本文用のテンプレートが自動生成されます。</div>
+
+  <div class="panel">
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeSingleBtn" onclick="setMode('single')">1回分（単発の出張）</button>
+      <button class="mode-btn" id="modeMultiBtn" onclick="setMode('multi')">1か月分（複数回）</button>
+    </div>
+
+    <label class="field-label">メールタイトル</label>
+    <div class="subject-line">
+      <input type="text" id="subjectInput" placeholder="経費 事前申請（6/4-6/6）">
+    </div>
+
+    <div id="tripsContainer"></div>
+
+    <div class="actions">
+      <button class="secondary" onclick="addTrip()" id="addTripBtn">＋ 出張を追加</button>
+      <button class="secondary" onclick="loadSample()">記載例を入力</button>
+      <button class="ghost" onclick="clearAll()">すべてクリア</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div id="grandTotalLine" class="grand-total"></div>
+    <div class="actions">
+      <button class="primary" onclick="copyForEmail()">📋 メール本文としてコピー</button>
+      <button class="secondary" onclick="window.print()">🖨 印刷 / PDF保存</button>
+      <span class="copy-status" id="copyStatus"></span>
+    </div>
+  </div>
+
+  <div id="previewArea">
+    <h2>プレビュー（この内容がコピーされます）</h2>
+    <div class="preview-lead">下記の通り、経費申請します。</div>
+    <div id="previewTables"></div>
+  </div>
+</div>
+
+<script>
+const ITEM_LABELS = ["電車・新幹線・バス等","航空券","宿泊","食事手当","交際費","タクシー","レンタカー"];
+
+function newTrip(){
+  return {
+    period: "",
+    nights: "",
+    place: "",
+    purpose: "",
+    items: ITEM_LABELS.map(l => ({label:l, amount:"", note:""})),
+    extra: []
+  };
+}
+
+let state = {
+  mode: "single",
+  subject: "経費 事前申請（　　　）",
+  trips: [newTrip()]
+};
+
+function save(){
+  try{ localStorage.setItem("expenseFormState", JSON.stringify(state)); }catch(e){}
+}
+function load(){
+  try{
+    const raw = localStorage.getItem("expenseFormState");
+    if(raw){ state = JSON.parse(raw); }
+  }catch(e){}
+}
+
+function setMode(mode){
+  state.mode = mode;
+  document.getElementById("modeSingleBtn").classList.toggle("active", mode==="single");
+  document.getElementById("modeMultiBtn").classList.toggle("active", mode==="multi");
+  document.getElementById("addTripBtn").style.display = mode==="multi" ? "inline-block" : "none";
+  if(mode==="single" && state.trips.length > 1){
+    state.trips = [state.trips[0]];
+  }
+  render();
+  save();
+}
+
+function addTrip(){
+  state.trips.push(newTrip());
+  render();
+  save();
+}
+
+function removeTrip(i){
+  state.trips.splice(i,1);
+  if(state.trips.length===0) state.trips.push(newTrip());
+  render();
+  save();
+}
+
+function addExtraRow(tripIdx){
+  state.trips[tripIdx].extra.push({label:"", amount:"", note:""});
+  render();
+  save();
+}
+function removeExtraRow(tripIdx, exIdx){
+  state.trips[tripIdx].extra.splice(exIdx,1);
+  render();
+  save();
+}
+
+function fmtNum(n){
+  const v = parseFloat(n);
+  if(isNaN(v)) return 0;
+  return v;
+}
+function fmtComma(n){
+  return Number(n).toLocaleString("ja-JP");
+}
+
+function tripTotal(trip){
+  let t = 0;
+  trip.items.forEach(it => t += fmtNum(it.amount));
+  trip.extra.forEach(it => t += fmtNum(it.amount));
+  return t;
+}
+
+function render(){
+  document.getElementById("subjectInput").value = state.subject;
+
+  const container = document.getElementById("tripsContainer");
+  container.innerHTML = "";
+
+  state.trips.forEach((trip, i) => {
+    const card = document.createElement("div");
+    card.className = "trip-card";
+
+    const showDel = state.mode==="multi" && state.trips.length > 1;
+
+    card.innerHTML = `
+      <div class="trip-head">
+        <span>出張 ${i+1}</span>
+        ${showDel ? `<button class="del-btn" onclick="removeTrip(${i})">削除</button>` : ""}
+      </div>
+      <div class="trip-body">
+        <div class="row">
+          <div>
+            <label class="field-label">日程</label>
+            <input type="text" data-t="${i}" data-f="period" value="${escAttr(trip.period)}" placeholder="例: 6/4-6/6">
+          </div>
+          <div>
+            <label class="field-label">宿泊日数</label>
+            <input type="text" data-t="${i}" data-f="nights" value="${escAttr(trip.nights)}" placeholder="例: 2泊3日 / 日帰り">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label class="field-label">行先</label>
+            <input type="text" data-t="${i}" data-f="place" value="${escAttr(trip.place)}" placeholder="例: 沖縄">
+          </div>
+          <div>
+            <label class="field-label">目的</label>
+            <input type="text" data-t="${i}" data-f="purpose" value="${escAttr(trip.purpose)}" placeholder="例: A社との契約">
+          </div>
+        </div>
+
+        <table class="item-table">
+          <tr><th style="width:150px">項目</th><th style="width:130px">金額（円）</th><th>備考</th><th></th></tr>
+          ${trip.items.map((it, j) => `
+            <tr>
+              <td class="label-cell">${it.label}</td>
+              <td class="amt-cell"><input type="number" data-t="${i}" data-it="${j}" data-f="amount" value="${escAttr(it.amount)}" placeholder="0"></td>
+              <td><input type="text" data-t="${i}" data-it="${j}" data-f="note" value="${escAttr(it.note)}" placeholder="任意"></td>
+              <td></td>
+            </tr>
+          `).join("")}
+          ${trip.extra.map((it, j) => `
+            <tr>
+              <td class="label-cell"><input type="text" data-t="${i}" data-ex="${j}" data-f="label" value="${escAttr(it.label)}" placeholder="項目名"></td>
+              <td class="amt-cell"><input type="number" data-t="${i}" data-ex="${j}" data-f="amount" value="${escAttr(it.amount)}" placeholder="0"></td>
+              <td><input type="text" data-t="${i}" data-ex="${j}" data-f="note" value="${escAttr(it.note)}" placeholder="任意"></td>
+              <td><button class="rm-row-btn" onclick="removeExtraRow(${i},${j})">✕</button></td>
+            </tr>
+          `).join("")}
+        </table>
+        <button class="add-row-btn" onclick="addExtraRow(${i})">＋ 項目を追加</button>
+        <div class="trip-total">合計　¥${fmtComma(tripTotal(trip))}</div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  container.querySelectorAll("input").forEach(inp => {
+    inp.addEventListener("input", onInputChange);
+  });
+
+  renderPreview();
+}
+
+function onInputChange(e){
+  const t = e.target.dataset.t;
+  if(t === undefined) return;
+  const trip = state.trips[parseInt(t)];
+  const f = e.target.dataset.f;
+  if(e.target.dataset.it !== undefined){
+    trip.items[parseInt(e.target.dataset.it)][f] = e.target.value;
+  } else if(e.target.dataset.ex !== undefined){
+    trip.extra[parseInt(e.target.dataset.ex)][f] = e.target.value;
+  } else {
+    trip[f] = e.target.value;
+  }
+  // update just totals + preview without full re-render (keeps focus)
+  updateTotalsInPlace();
+  renderPreview();
+  save();
+}
+
+function updateTotalsInPlace(){
+  document.querySelectorAll(".trip-total").forEach((el, i) => {
+    el.textContent = "合計　¥" + fmtComma(tripTotal(state.trips[i]));
+  });
+  document.getElementById("grandTotalLine").textContent =
+    state.trips.length > 1 ? `全体合計　¥${fmtComma(state.trips.reduce((s,t)=>s+tripTotal(t),0))}` : "";
+}
+
+function escAttr(s){
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+}
+function escHtml(s){
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+function renderPreview(){
+  const holder = document.getElementById("previewTables");
+  holder.innerHTML = "";
+  state.trips.forEach((trip, i) => {
+    const rows = [];
+    rows.push(["日程・宿泊日数", trip.period, trip.nights]);
+    rows.push(["行先・目的", trip.place, trip.purpose]);
+    trip.items.forEach(it => rows.push([it.label, it.amount ? fmtComma(fmtNum(it.amount)) : "", it.note]));
+    trip.extra.forEach(it => rows.push([it.label, it.amount ? fmtComma(fmtNum(it.amount)) : "", it.note]));
+    rows.push(["合計", fmtComma(tripTotal(trip)), ""]);
+
+    const table = document.createElement("table");
+    table.className = "preview-table";
+    table.innerHTML = rows.map(r => `
+      <tr>
+        <td class="plabel">${escHtml(r[0])}</td>
+        <td class="pval">${escHtml(r[1])}</td>
+        <td class="pnote">${escHtml(r[2])}</td>
+      </tr>
+    `).join("");
+    holder.appendChild(table);
+  });
+  updateTotalsInPlace();
+}
+
+document.getElementById("subjectInput").addEventListener("input", e => {
+  state.subject = e.target.value;
+  save();
+});
+
+async function copyForEmail(){
+  const status = document.getElementById("copyStatus");
+  const subject = state.subject;
+  let html = `<div>下記の通り、経費申請します。</div><br>`;
+  let text = `件名: ${subject}\n\n下記の通り、経費申請します。\n\n`;
+
+  state.trips.forEach(trip => {
+    const rows = [];
+    rows.push(["日程・宿泊日数", trip.period, trip.nights]);
+    rows.push(["行先・目的", trip.place, trip.purpose]);
+    trip.items.forEach(it => rows.push([it.label, it.amount ? fmtComma(fmtNum(it.amount)) : "", it.note]));
+    trip.extra.forEach(it => rows.push([it.label, it.amount ? fmtComma(fmtNum(it.amount)) : "", it.note]));
+    rows.push(["合計", fmtComma(tripTotal(trip)), ""]);
+
+    html += `<table style="border-collapse:collapse;width:100%;margin-bottom:18px;font-family:Meiryo,sans-serif;font-size:13px;">`;
+    rows.forEach(r => {
+      html += `<tr>
+        <td style="border:1px solid #000;padding:4px 8px;width:22%;">${escHtml(r[0])}</td>
+        <td style="border:1px solid #000;padding:4px 8px;width:20%;">${escHtml(r[1])}</td>
+        <td style="border:1px solid #000;padding:4px 8px;width:58%;">${escHtml(r[2])}</td>
+      </tr>`;
+    });
+    html += `</table><br>`;
+
+    rows.forEach(r => {
+      text += `${r[0]}\n${r[1]}\n${r[2]}\n\n`;
+    });
+    text += "\n";
+  });
+
+  try{
+    if(window.ClipboardItem){
+      const blobHtml = new Blob([html], {type:"text/html"});
+      const blobText = new Blob([text], {type:"text/plain"});
+      await navigator.clipboard.write([
+        new ClipboardItem({"text/html": blobHtml, "text/plain": blobText})
+      ]);
+    } else {
+      await navigator.clipboard.writeText(text);
+    }
+    status.textContent = "コピーしました。メール本文に貼り付けてください。";
+    setTimeout(()=>status.textContent="", 4000);
+  } catch(err){
+    // fallback
+    try{
+      await navigator.clipboard.writeText(text);
+      status.textContent = "コピーしました（テキスト形式）。";
+    }catch(e2){
+      status.textContent = "コピーに失敗しました。手動で選択してください。";
+    }
+    setTimeout(()=>status.textContent="", 4000);
+  }
+}
+
+function loadSample(){
+  if(state.mode === "single"){
+    state.trips = [{
+      period:"6/4-6/6", nights:"2泊3日", place:"沖縄", purpose:"A社との契約",
+      items:[
+        {label:"電車・新幹線・バス等", amount:"5000", note:""},
+        {label:"航空券", amount:"100000", note:"旅行シーズンのため通常より高額です"},
+        {label:"宿泊", amount:"40000", note:"旅行シーズンのため通常より高額です"},
+        {label:"食事手当", amount:"6000", note:""},
+        {label:"交際費", amount:"30000", note:"A社〇〇様、△△様と会食予定"},
+        {label:"タクシー", amount:"10000", note:"公共交通機関が少ないので、タクシーを利用"},
+        {label:"レンタカー", amount:"10000", note:"公共交通機関が少ないので、レンタカー利用"}
+      ],
+      extra:[]
+    }];
+    state.subject = "経費 事前申請（6/4-6/6）";
+  } else {
+    state.trips = [
+      {
+        period:"6/4-6/6", nights:"2泊3日", place:"沖縄", purpose:"A社との契約",
+        items:[
+          {label:"電車・新幹線・バス等", amount:"5000", note:""},
+          {label:"航空券", amount:"100000", note:"旅行シーズンのため通常より高額です"},
+          {label:"宿泊", amount:"40000", note:"旅行シーズンのため通常より高額です"},
+          {label:"食事手当", amount:"6000", note:""},
+          {label:"交際費", amount:"30000", note:"A社〇〇様、△△様と会食予定"},
+          {label:"タクシー", amount:"10000", note:"公共交通機関が少ないので、タクシーを利用"},
+          {label:"レンタカー", amount:"10000", note:"公共交通機関が少ないので、レンタカー利用"}
+        ], extra:[]
+      },
+      {
+        period:"6/10", nights:"日帰り", place:"名古屋", purpose:"名古屋三越カウンター訪問　KIOSKセットアップ",
+        items:[
+          {label:"電車・新幹線・バス等", amount:"30000", note:"新幹線往復、電車"},
+          {label:"航空券", amount:"", note:""},
+          {label:"宿泊", amount:"", note:""},
+          {label:"食事手当", amount:"", note:""},
+          {label:"交際費", amount:"", note:""},
+          {label:"タクシー", amount:"5000", note:"機材を運搬するため"},
+          {label:"レンタカー", amount:"", note:""}
+        ], extra:[]
+      },
+      {
+        period:"6/15-6/16", nights:"1泊2日", place:"北海道", purpose:"現地調査",
+        items:[
+          {label:"電車・新幹線・バス等", amount:"20000", note:""},
+          {label:"航空券", amount:"100000", note:"旅行シーズンのため通常より高額です"},
+          {label:"宿泊", amount:"30000", note:"1泊分のみ、旅行シーズンのため通常より高額です"},
+          {label:"食事手当", amount:"3000", note:""},
+          {label:"交際費", amount:"", note:""},
+          {label:"タクシー", amount:"", note:""},
+          {label:"レンタカー", amount:"20000", note:"訪問先多数のため、レンタカー利用"}
+        ], extra:[]
+      }
+    ];
+    state.subject = "経費 事前申請（6月分・複数出張）";
+  }
+  render();
+  save();
+}
+
+function clearAll(){
+  if(!confirm("入力内容をすべてクリアします。よろしいですか？")) return;
+  state = { mode: state.mode, subject: "経費 事前申請（　　　）", trips:[newTrip()] };
+  render();
+  save();
+}
+
+// init
+load();
+document.getElementById("modeSingleBtn").classList.toggle("active", state.mode==="single");
+document.getElementById("modeMultiBtn").classList.toggle("active", state.mode==="multi");
+document.getElementById("addTripBtn").style.display = state.mode==="multi" ? "inline-block" : "none";
+render();
+</script>
+</body>
+</html>
